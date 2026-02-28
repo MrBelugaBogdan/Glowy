@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glowy — Територія ігор</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --card-bg: #161616;
+            --accent: #bfff00; /* Кислотний зелений */
+            --text: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(191, 255, 0, 0.5);
+        }
+
+        .btn-upload {
+            background: var(--accent);
+            color: black;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(191, 255, 0, 0.4);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .game-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: 0.3s;
+            border: 1px solid #333;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+
+        .game-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+
+        .game-info {
+            padding: 15px;
+        }
+
+        .game-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+
+        .game-info p {
+            font-size: 12px;
+            color: #888;
+            margin: 0;
+        }
+
+        /* Стиль для вікна гри */
+        #game-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        iframe {
+            width: 80%;
+            height: 80%;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+        }
+
+        .close-btn {
+            margin-bottom: 10px;
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">Glowy</div>
+    <a href="upload.html" class="btn-upload">➕ Викласти гру</a>
+</header>
+
+<div class="grid" id="games-container">
+    </div>
+
+<div id="game-overlay">
+    <div class="close-btn" onclick="closeGame()">✖ Закрити гру</div>
+    <iframe id="game-iframe" src=""></iframe>
+</div>
+
+<script>
+    // 1. ТВОЇ ДАНІ (ВСТАВ СЮДИ СВОЇ КЛЮЧІ)
+    const SUPABASE_URL = 'https://wiinnchnzekfftuvvbfs.supabase.com';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpaW5uY2huemVrZmZ0dXZ2YmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzMDQ0NzgsImV4cCI6MjA4Nzg4MDQ3OH0.QIMEgQcdYgUgrzndIVN58Bv5ERfVIwtXDyoO49-Z-Q8';
+
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 2. ФУНКЦІЯ ДЛЯ ЗАВАНТАЖЕННЯ ІГОР З БАЗИ
+    async function loadGames() {
+        const { data: games, error } = await _supabase
+            .from('games')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Помилка завантаження:', error);
+            return;
+        }
+
+        const container = document.getElementById('games-container');
+        container.innerHTML = '';
+
+        games.forEach(game => {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.onclick = () => openGame(game.url);
+            
+            card.innerHTML = `
+                <img src="${game.image || 'https://via.placeholder.com/300x200?text=Glowy+Game'}" alt="${game.title}">
+                <div class="game-info">
+                    <h3>${game.title}</h3>
+                    <p>Автор: ${game.author}</p>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // 3. ФУНКЦІЇ ПЛЕЄРА
+    function openGame(url) {
+        document.getElementById('game-iframe').src = url;
+        document.getElementById('game-overlay').style.display = 'flex';
+    }
+
+    function closeGame() {
+        document.getElementById('game-overlay').style.display = 'none';
+        document.getElementById('game-iframe').src = '';
+    }
+
+    // Запускаємо завантаження при старті
+    loadGames();
+</script>
+
+</body>
+</html>
