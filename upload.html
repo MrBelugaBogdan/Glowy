@@ -2,111 +2,47 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Додати гру — Glowy</title>
+    <title>Додати гру</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background-color: #0a0a0a;
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .form-card {
-            background: #161616;
-            padding: 30px;
-            border-radius: 20px;
-            border: 2px solid #bfff00;
-            box-shadow: 0 0 20px rgba(191, 255, 0, 0.2);
-            width: 100%;
-            max-width: 400px;
-        }
-        h2 { color: #bfff00; text-align: center; margin-bottom: 25px; }
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #333;
-            background: #222;
-            color: white;
-            box-sizing: border-box;
-            outline: none;
-        }
-        input:focus { border-color: #bfff00; }
-        button {
-            width: 100%;
-            padding: 15px;
-            background: #bfff00;
-            color: black;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
-            transition: 0.3s;
-        }
-        button:hover { background: #d4ff00; transform: translateY(-2px); }
-        #status { text-align: center; margin-top: 15px; font-weight: bold; }
-        .back-link { display: block; text-align: center; margin-top: 15px; color: #888; text-decoration: none; font-size: 14px; }
+        body { background: #1a1a1a; color: white; display: flex; justify-content: center; padding-top: 50px; }
+        form { display: flex; flex-direction: column; width: 300px; gap: 10px; }
+        input { padding: 10px; border-radius: 5px; border: none; }
+        button { padding: 10px; background: #00ffcc; border: none; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
+    <form id="uploadForm">
+        <h2>Додати нову гру</h2>
+        <input type="text" id="title" placeholder="Назва гри" required>
+        <input type="text" id="description" placeholder="Опис/Автор" required>
+        <input type="text" id="image_url" placeholder="Посилання на картинку" required>
+        <input type="text" id="game_url" placeholder="Посилання на гру" required>
+        <button type="submit">ОПУБЛІКУВАТИ</button>
+    </form>
 
-<div class="form-card">
-    <h2>🚀 Додати гру</h2>
-    <input type="text" id="title" placeholder="Назва гри">
-    <input type="text" id="url" placeholder="Посилання на гру (URL)">
-    <input type="text" id="image" placeholder="Посилання на картинку">
-    <input type="text" id="author" placeholder="Твоє ім'я (Автор)">
-    <button onclick="uploadGame()">ОПУБЛІКУВАТИ</button>
-    <p id="status"></p>
-    <a href="index.html" class="back-link">← На головну</a>
-</div>
+    <script>
+        const SUPABASE_URL = 'https://wiinnchnzekfftuvvbfs.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpaW5uY2huemVrZmZ0dXZ2YmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzMDQ0NzgsImV4cCI6MjA4Nzg4MDQ3OH0.QIMEgQcdYgUgrzndIVN58Bv5ERfVIwtXDyoO49-Z-Q8';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-<script>
-    // ТУТ ТВОЇ ДАНІ (ВСТАВ СВОЇ КЛЮЧІ)
-    const SUPABASE_URL = 'https://wiinnchnzekfftuvvbfs.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpaW5uY2huemVrZmZ0dXZ2YmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzMDQ0NzgsImV4cCI6MjA4Nzg4MDQ3OH0.QIMEgQcdYgUgrzndIVN58Bv5ERfVIwtXDyoO49-Z-Q8'; 
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const gameData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                image_url: document.getElementById('image_url').value,
+                game_url: document.getElementById('game_url').value
+            };
 
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            const { error } = await _supabase.from('games').insert([gameData]);
 
-    async function uploadGame() {
-        const title = document.getElementById('title').value;
-        const url = document.getElementById('url').value;
-        const image = document.getElementById('image').value;
-        const author = document.getElementById('author').value;
-        const statusMsg = document.getElementById('status');
-
-        if (!title || !url) {
-            statusMsg.innerText = "❌ Заповни назву та посилання!";
-            statusMsg.style.color = "red";
-            return;
-        }
-
-        statusMsg.innerText = "⏳ Публікуємо...";
-        statusMsg.style.color = "white";
-
-        const { data, error } = await _supabase
-            .from('games')
-            .insert([{ title, url, image, author }]);
-
-        if (error) {
-            statusMsg.innerText = "Помилка: " + error.message;
-            statusMsg.style.color = "red";
-        } else {
-            statusMsg.innerText = "✅ ГРУ ДОДАНО! Перевір головну.";
-            statusMsg.style.color = "#bfff00";
-            // Очищення форми
-            document.querySelectorAll('input').forEach(input => input.value = '');
-        }
-    }
-</script>
-
+            if (error) alert('Помилка: ' + error.message);
+            else {
+                alert('Гру додано!');
+                window.location.href = 'index.html';
+            }
+        };
+    </script>
 </body>
 </html>
